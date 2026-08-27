@@ -1,0 +1,35 @@
+name: Apply Lesson 1 test update
+on:
+  push:
+    branches: [lesson-1-test]
+permissions:
+  contents: write
+jobs:
+  lesson1:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply Lesson 1 Space Bar activity
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          if 'id="spacePart"' in s:
+              print('Lesson 1 update already present')
+              raise SystemExit(0)
+          s = s.replace('<div class="lessonCard hidden" id="fjPart"><h2>Part 4: ⌨️ Meet F & J</h2>', '<div class="lessonCard hidden" id="spacePart"><h2>Part 3: ␣ Meet the Space Bar</h2><p>The <strong>Space Bar</strong> makes a space between words. Place your thumbs near the space bar and press it once.</p><div class="target">HELLO &nbsp; WORLD</div><p>Press the Space Bar 5 times to make five spaces.</p><div class="target" id="spacePrompt">_</div><p id="spaceFeedback">Your space bar is ready!</p><div class="progress"><div id="spaceBar"></div></div></div><div class="lessonCard hidden" id="fjPart"><h2>Part 4: ⌨️ Meet F & J</h2>')
+          s = s.replace("let currentClassId=null,student=null,l1i=0,l1correct=0", "let currentClassId=null,student=null,spaceCount=0,l1i=0,l1correct=0")
+          s = s.replace("document.getElementById('mousePart2').classList.add('hidden');document.getElementById('fjPart').classList.add('hidden');", "document.getElementById('mousePart2').classList.add('hidden');document.getElementById('spacePart').classList.add('hidden');document.getElementById('fjPart').classList.add('hidden');")
+          s = s.replace("document.getElementById('bar').style.width='0';document.getElementById('challengeBar').style.width='0';show('lesson1')", "document.getElementById('bar').style.width='0';document.getElementById('challengeBar').style.width='0';document.getElementById('spaceBar').style.width='0';document.getElementById('spacePrompt').textContent='_';document.getElementById('spaceFeedback').textContent='Your space bar is ready!';spaceCount=0;window.removeEventListener('keydown',spaceKey);show('lesson1')")
+          s = s.replace("document.getElementById('movingStatus').textContent='Mouse activity 2 complete! Next: F and J.';document.getElementById('fjPart').classList.remove('hidden');", "document.getElementById('movingStatus').textContent='Mouse activity 2 complete! Next: the Space Bar.';document.getElementById('spacePart').classList.remove('hidden');document.getElementById('spacePart').scrollIntoView({behavior:'smooth',block:'center'});window.addEventListener('keydown',spaceKey);")
+          s = s.replace('function startPractice(){', "function spaceKey(e){if(document.getElementById('spacePart').classList.contains('hidden'))return;if(e.key===' '){e.preventDefault();spaceCount++;document.getElementById('spaceBar').style.width=(spaceCount/5*100)+'%';document.getElementById('spaceFeedback').textContent=spaceCount<5?'⭐ Nice! Press it again!':'🎉 Space Bar activity complete! Next: F and J.';if(spaceCount>=5){window.removeEventListener('keydown',spaceKey);document.getElementById('spacePart').classList.add('hidden');document.getElementById('fjPart').classList.remove('hidden');document.getElementById('fjPart').scrollIntoView({behavior:'smooth',block:'center'});}}}\nfunction startPractice(){")
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit Lesson 1 update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Add Space Bar activity to Lesson 1"
+          git push
