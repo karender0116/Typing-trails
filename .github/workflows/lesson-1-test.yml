@@ -1,0 +1,21 @@
+name: Lesson 1 Test
+
+on:
+  push:
+    branches:
+      - lesson-1-test
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out lesson-1-test
+        uses: actions/checkout@v4
+      - name: Verify Lesson 1 file exists
+        run: test -s index.html
+      - name: Report deployment candidate
+        run: echo "Lesson 1 test branch is ready for deployment validation."
