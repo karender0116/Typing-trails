@@ -1,0 +1,28 @@
+name: Lesson 1 Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_branch:
+        description: Branch to validate
+        required: true
+        default: lesson-1-test
+  push:
+    branches:
+      - lesson-1-test
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out selected branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.test_branch || github.ref_name }}
+      - name: Verify Lesson 1 file exists
+        run: test -s index.html
+      - name: Report deployment candidate
+        run: echo "Lesson 1 test branch is ready for deployment validation."
