@@ -1,0 +1,33 @@
+name: Deploy Lesson 1
+on:
+  push:
+    paths:
+      - '.github/workflows/lesson1-deploy.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add Lesson 1
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          if 'lesson1-card' not in s:
+              marker='</section>\n<section id="teacherLogin"'
+              lesson='''<section id="lesson1-card" class="hidden"><div class="panel"><button class="back" onclick="show('studentHome')">← Back to Student Home</button><div class="ey">🌟 TYPING TRAIL • LESSON 1</div><h1>🖱️ Mouse Skills + F & J</h1><p>Learn to point, click, and find the two home-row guide keys.</p><div id="l1mouse"><h2>Part 1: 🖱️ Mouse Skills</h2><p>Click inside the game area, then find and click the ⭐.</p><div id="l1area" style="height:210px;border:4px dashed #b8b0e8;border-radius:22px;display:flex;align-items:center;justify-content:center;position:relative;background:#faf9ff;cursor:crosshair" onclick="l1Area(event)"><span id="l1text">Click here to start!</span><button id="l1star" class="hidden" style="position:absolute;border:0;border-radius:50%;background:#ffd15c;font-size:28px;width:54px;height:54px;cursor:pointer">⭐</button></div></div><div id="l1fj" class="hidden"><h2>Part 2: ⌨️ Meet F & J</h2><p>Feel for the little bumps on <strong>F</strong> and <strong>J</strong>. They help your fingers find home row.</p><div style="font-size:46px;font-weight:900;letter-spacing:12px;text-align:center;padding:20px;background:#f0edff;border-radius:18px">F &nbsp; J</div><p>Put your left index finger on F and right index finger on J.</p><button class="btn yellow" onclick="l1Start()">Start F & J Practice 🚀</button></div><div id="l1practice" class="hidden"><h2>Part 3: ⭐ F & J Challenge</h2><p>Press the letter shown on your keyboard.</p><div id="l1prompt" style="font-size:56px;font-weight:900;text-align:center;padding:20px;background:#f0edff;border-radius:18px">F</div><p id="l1feedback">Your keyboard is ready!</p><div style="height:13px;background:#e7eaf1;border-radius:99px;overflow:hidden"><div id="l1bar" style="height:100%;background:#7057d9;width:0"></div></div></div><div id="l1done" class="hidden" style="text-align:center;background:#dcf7e8;border-radius:18px;padding:20px"><h2>🎉 Trail Complete!</h2><p id="l1result"></p><p>You practiced mouse skills and your first two home-row letters.</p></div></div></section>\n<section id="teacherLogin"'''
+              s=s.replace(marker,lesson)
+              old='''<div class="stat">🎯 Your typing journey starts here!</div><p>Lessons and progress tracking are next. Your student account is working securely.</p>'''
+              new='''<div class="stat">🎯 Your typing journey starts here!</div><p>Your first trail is ready!</p><button class="btn primary" onclick="show('lesson1-card')">Start Lesson 1 🚀</button>'''
+              s=s.replace(old,new)
+              insert='''\n<script>\nlet l1i=0,l1correct=0,l1seq=['F','J','J','F','F','J','F','J'];\nfunction l1Area(e){if(e.target.id==='l1star')return;const a=document.getElementById('l1area'),st=document.getElementById('l1star'),r=a.getBoundingClientRect();st.style.left=Math.max(8,Math.random()*(r.width-62))+'px';st.style.top=Math.max(8,Math.random()*(r.height-62))+'px';st.classList.remove('hidden');document.getElementById('l1text').textContent='Now click the ⭐!';st.onclick=function(ev){ev.stopPropagation();st.classList.add('hidden');document.getElementById('l1text').textContent='🎉 Great clicking!';document.getElementById('l1fj').classList.remove('hidden');document.getElementById('l1fj').scrollIntoView({behavior:'smooth',block:'center'})}}\nfunction l1Start(){l1i=0;l1correct=0;document.getElementById('l1fj').classList.add('hidden');document.getElementById('l1practice').classList.remove('hidden');document.getElementById('l1prompt').textContent=l1seq[0];window.addEventListener('keydown',l1Key)}\nfunction l1Key(e){if(document.getElementById('l1practice').classList.contains('hidden'))return;const k=e.key.toUpperCase();if(k!=='F'&&k!=='J')return;e.preventDefault();if(k===l1seq[l1i]){l1correct++;l1i++;document.getElementById('l1feedback').textContent='⭐ Great job!';document.getElementById('l1bar').style.width=(l1i/l1seq.length*100)+'%';if(l1i>=l1seq.length){window.removeEventListener('keydown',l1Key);l1Finish()}else document.getElementById('l1prompt').textContent=l1seq[l1i]}else document.getElementById('l1feedback').textContent='Almost! Look at the letter and try again.'}\nasync function l1Finish(){document.getElementById('l1practice').classList.add('hidden');document.getElementById('l1done').classList.remove('hidden');document.getElementById('l1result').textContent=`You got ${l1correct} of ${l1seq.length} letters correct!`;try{await fetch(SUPABASE_URL+'/functions/v1/student-progress',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({student_id:student?.id,lesson_id:'lesson-1-mouse-fj',mouse_complete:true,typing_correct:l1correct,typing_total:l1seq.length})})}catch(e){}}\n</script>\n'''
+              s=s.replace('</body>',insert+'</body>')
+              p.write_text(s)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet || git commit -m 'Add Lesson 1 mouse and F J practice' && git push
